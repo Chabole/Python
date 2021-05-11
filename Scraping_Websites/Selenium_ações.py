@@ -19,17 +19,17 @@ import pandas as pd
 
 '''https://statusinvest.com.br/acoes/embr3'''
  
+#Cominho para o chromeDrive funcionar
 PATH = 'C:/Users/arthu/Downloads/chromedriver_win32/chromedriver.exe'
 driver = webdriver.Chrome(PATH)
 
 #Acessa o site
 driver.get('https://statusinvest.com.br/')
 
-#Ativos
+#Ativos que irá ser pesquisado no site
 ativos = ['EMBR3', 'BBAS3', 'BBSE3', 'ITSA4', 'ABEV3', 'JBSS3', 'PETR3', 'BRDT3', 'VALE3',
           'SANB3', 'ITUB3', 'BIDI3', 'CPFE3', 'FLRY3']
 
-#Espera a barra da ação aparecer e clica nela.
 Tabela=[]
 for ativo in ativos:   
     
@@ -40,10 +40,14 @@ for ativo in ativos:
     #Enontra a barra de busca e digita o nome da ação
     busca = driver.find_element_by_xpath('//*[@id="main-search"]/div[1]/span[1]/input[2]')
     busca.send_keys(ativo)
+    
+    #Espera a barra da ação aparecer e clica no ativo.
     ação = WebDriverWait(driver, 5).until(
         EC.presence_of_element_located((By.XPATH,'//*[@id="main-search"]/div[2]/div/div/a/div/div[2]/div/div[2]'))
     )
     ação.click()
+    
+    #Lê a página e busca alguns indicadore do ativo
     Tabela.append({
         
         'Ativo':((driver.find_element_by_xpath('//*[@id="main-header"]/div/div/div[1]/h1')).text),    
@@ -60,8 +64,11 @@ for ativo in ativos:
         'D.Y':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[1]/div/div/strong')).text)
         
         })
-        
+    
+#Cria o DataFrame a partir do dicionário 'Tabela'
 df = pd.DataFrame(data=Tabela)
+
+#Salva em em arquivo excel
 df.to_excel('D:/Arquivos Perssoais/Finanças/Planilha_automática.xlsx', 'Planilha geral')
 driver.quit()
 
