@@ -30,6 +30,7 @@ driver.get('https://statusinvest.com.br/')
 ativos = ['EMBR3', 'BBAS3', 'BBSE3', 'ITSA4', 'ABEV3', 'JBSS3', 'PETR3', 'BRDT3', 'VALE3',
           'SANB3', 'ITUB3', 'BIDI3', 'CPFE3', 'FLRY3']
 
+
 Tabela=[]
 for ativo in ativos:   
     
