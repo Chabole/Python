@@ -23,73 +23,93 @@ class Wing:
         self.K = 1/(3.14*0.75*self.AR)
     
     def __repr__(self):
-        return f'{self.nome}, S={self.S}, b={self.b}, Clmáx={self.CLmax}'
-
-    
+        self.AR = round(self.AR,2)
+        return f'{self.nome}, S={self.S}, \
+    b={self.b}, AR={self.AR}'
+                    
     def V_stall(self, W):
         Vstall = (2*W/(1.225*self.S*self.CLmax))
         return Vstall
     
     def distElip_Sust(self, W):
         y = np.linspace(-self.b/2, self.b/2)
-        T0 = (4*(2*W))/(1.225*23*self.b*3.14)
-        Le = T0 * ((1-((2*y/self.b)**2))**0.5)
+        
+        A = 4*(2.3*W)/(self.b*3.14)
+        Le = A*((1-((2*y/self.b)**2))**0.5)
         return y, Le
-    
-    def efeito_Solo(self, h):
-        A = 16*(self.h)/self.b
-        return (A**2)/(1 + (A**2))
     
     def Cd_Total(self, Cl):
         Cd = 0.08 + (self.K*(Cl**2)) 
         return Cd
     
-    #Problema
-    def distRetang_Sust(self, W):
-        y = np.linspace(-self.b/2, self.b/2)
-        lamb = 0.841/3.36
-        A = (2*(2*W))/((1 + lamb)*self.b)
-        B = (2*y*(lamb - 1))/self.b
-    
-        Lt = A*((1 + (B))**0.5)
-        
-        return Lt
+#===================================================    
     
     
-
 asa_1  = Wing('Asa 1', 0.988, 2.08, 1.62)
-asa_2  = Wing('Asa 2', 0.868, 2.2, 1.5)
+asa_2  = Wing('Asa 2', 0.868, 2.5, 1.5)
+asa_3  = Wing('Asa 3', 1.3, 2.5, 1.5)
 
-y1, dist_elip1 = asa_1.distElip_Sust(100)
-y2, dist_elip2 = asa_2.distElip_Sust(100)
+Asas = np.array((asa_1, asa_2, asa_3))
 
-fig, ax = plt.subplots()
-ax.set(title='Distribuição eliptica de sustentação', xlabel='Posição relativa a asa (m)', 
-       ylabel='Carregamento (N)')
+# y1, dist_elip1 = asa_1.distElip_Sust(140)
+# y2, dist_elip2 = asa_2.distElip_Sust(140)
+# y3, dist_elip3 = asa_3.distElip_Sust(140)
 
-ax.plot(y1, dist_elip1, label= f'{asa_1}')
-ax.plot(y2, dist_elip2, label= f'{asa_2}')
+# fig, ax = plt.subplots()
+# ax.set(title='Distribuição eliptica de sustentação', 
+#        xlabel='Posição relativa a asa (m)', 
+#        ylabel='Carregamento (N)')
 
-ax.legend()
+# ax.plot(y1, dist_elip1, label= f'{asa_1}')
+# ax.plot(y2, dist_elip2, label= f'{asa_2}')
+# ax.plot(y3, dist_elip3, label= f'{asa_3}')
 
-#==============================================
+# ax.legend()
+# ax.grid(linestyle='--')
 
+# #==============================================
 
 Cl = np.linspace(0.1, 1.8)
 
-Zb = zp.Airplane(S=0.988, b=2.08, CLmax=1.62)
-Zb.C_D0 = 0.08
+# Cd1 = asa_1.Cd_Total(Cl)
+# Cd2 = asa_2.Cd_Total(Cl)
+# Cd3 = asa_3.Cd_Total(Cl)
 
-Cd1 = asa_1.Cd_Total(Cl)
-Cd2 = asa_2.Cd_Total(Cl)
+# fig, ax = plt.subplots()
+# ax.set(title='Cl x Cd', xlabel='Cd', 
+#         ylabel='Cl')
+
+# ax.plot(Cd1, Cl, label= f'{asa_1}, AR={asa_1.AR}')
+# ax.plot(Cd2, Cl, label= f'{asa_2}, AR={asa_2.AR}')
+# ax.plot(Cd3, Cl, label= f'{asa_3}, AR={asa_3.AR}')
+
+# ax.set_xlim(0)
+# ax.legend()
+# ax.grid(linestyle='--')
+
+#================  PLOTS COM OBJETOS  =================
 
 fig, ax = plt.subplots()
-ax.set(title='Cl x Cd', xlabel='Cd', 
+ax.set(title='Distribuição eliptica de sustentação', 
+       xlabel='Cd', 
        ylabel='Cl')
 
-ax.plot(Cd1, Cl, label= f'{asa_1}, CD0=0.08')
-#ax.plot(Cd2, Cl, label= f'{asa_2}')
-ax.plot(Zb.drag_Coef(Cl), Cl, marker='^', label= f'{Zb.name}, S={Zb.S}, b={Zb.b}, CD0={Zb.C_D0}')
+fig, ax2 = plt.subplots()
+ax2.set(title='Cl x Cd', 
+        xlabel='Posição relativa a asa (m)', 
+        ylabel='Carregamento (N)')
+
+for Asa in Asas:
+    Cd = Asa.Cd_Total(Cl)
+    ax.plot(Cd, Cl, label= f'{Asa}')
+    
+    y, dist_elip = Asa.distElip_Sust(140)
+    ax2.plot(y, dist_elip, label= f'{Asa}')
 
 ax.set_xlim(0)
 ax.legend()
+ax.grid(linestyle='--')
+
+ax2.legend()
+ax2.grid(linestyle='--')
+
