@@ -4,22 +4,43 @@ Created on Sat May 15 21:10:56 2021
 
 @author: Arthur Chabole
 ========================
+Testando a classe Asa
 
 """
+
 from classe_asa import Asa
 import numpy as np
 import matplotlib.pyplot as plt
 
-asa_1 = Asa('Asa 1', 0.988, 2.08, 1.62)
+#================  PLOTS Cd e dist de sustentação  =================
 
-Le = asa_1.distElip_Sust(140)
-M = asa_1.momento_Fletor(140)
+asa_1  = Asa('Asa 1', 0.988, 2.08, 1.62)
+asa_2  = Asa('Asa 2', 0.868, 2.5, 1.5)
+asa_3  = Asa('Asa 3', 1.1, 2.7, 1.5)
 
-fig, ax_1 = plt.subplots()
-ax_1.set(title=f'{asa_1}', xlabel='Envergadura(m)',
-       ylabel='Valor numérico')
+Asas = np.array((asa_1, asa_2, asa_3))
 
-ax_1.plot(Le[0], M , label='Momento fletor')
-ax_1.plot(Le[0], Le[1], label='Distribuição elíptica de sustentação')
+fig, ax = plt.subplots()
+ax.set(title='Cl x Cd', 
+        xlabel='Cd', 
+        ylabel='Cl')
 
-ax_1.legend()
+fig, ax2 = plt.subplots()
+ax2.set(title='Distribuição eliptica de sustentação', 
+        xlabel='Posição relativa a asa (m)', 
+        ylabel='Carregamento (N)')
+
+for asa in Asas:
+    Cd = asa.Cd_Total()
+    ax.plot(Cd, asa.Cl, label= f'{asa}')
+    
+    y, dist_elip = asa.distElip_Sust(140)
+    ax2.plot(y, dist_elip, label= f'{asa}')
+
+ax.set_xlim(0)
+ax.legend()
+ax.grid(linestyle='--')
+
+ax2.legend()
+ax2.grid(linestyle='--')
+
