@@ -2,8 +2,21 @@
 """
 Created on Mon May 17 10:01:26 2021
 
+__Version__: 0.0.3
+
+__Release__: 17/05/2021
+
 @author: Arthur Chabole
-========================
+====================================================================
+EQUIPE ZEBRA AERODESIGN 2021 - ZEBRINHA AGIOTA
+=====================================================================
+Passos para usar a zebrinha agiota
+0. Esteja com o  pacote anaconda instalado https://www.anaconda.com/products/individual
+1. Instale o chrome driver https://sites.google.com/a/chromium.org/chromedriver/downloads
+2. Instale ou verifique se as bibliotecas selenium e BeautilfulSoup
+    2.1 Caso não esteja instalado vá no console do python e digite
+    2.2 pip install selenium (precione enter e espere instalar)
+    2.3 pip install BeautilfulSoup (precione enter e espere instalar)
 
 """
 
@@ -19,7 +32,6 @@ import requests
 from bs4 import BeautifulSoup 
 
 class Zebrinha:
-    
     #Tempo de espera em segundos
     tempo = 0.2
     
@@ -27,12 +39,11 @@ class Zebrinha:
     Barra_pesquisa = '//*[@id="side"]/div[1]/div/label/div/div[2]'
     Barra_mensagem = '//*[@id="main"]/footer/div[1]/div[2]/div/div[2]'
     Barra_grupo = '//*[@id="main"]/header/div[2]/div[1]/div/span'
+    Barra_docs = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div/section/div[2]/div[2]/div/div[1]/div[1]'
+    Botão_docs = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div[1]/button[2]'
     Botão_mais = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div/section/div[5]/div[5]/div[2]/div/div'
     Botão_reporte = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div/section/div[7]/div/div[2]'
     Botão_cancel = '//*[@id="app"]/div[1]/span[2]/div[1]/div/div/div/div/div/div[2]/div[1]/div/div'
-    Barra_docs = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div/section/div[2]/div[2]/div/div[1]/div[1]'
-    
-    Botão_docs = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div[1]/button[2]'
     Arquivo = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div[2]/span/div/div/div/div/div[1]/div/div/div/div'
     
     #Nome das classes aqui (BeautifulSoup )
@@ -41,17 +52,19 @@ class Zebrinha:
     Bloco_contato = "_2aBzC"
     Nome_contato = "_35k-1 _1adfa _3-8er"
     
-    def __init__(self, PATH_driver):
+    def __init__(self, PATH_driver, mes):
         self.PATH = PATH_driver
         self.driver = webdriver.Chrome(self.PATH)
         self.driver.maximize_window()
         self.driver.get('https://web.whatsapp.com')
+        self.mes = mes
         
     def fechar(self):
         self.driver.close()
 
-    #Esta com problema em encontrar todos os contatos
+    #Esta com problema em encontrar grupos com mais de 20 contatos
     def buscarContatos_byGroup(self, Nome_Grupo, grupo_Grande=False):
+        
         '''
         
         Encontra os nomes dos contatos que participam do grupo. 
@@ -72,7 +85,7 @@ class Zebrinha:
 
         '''
         
-        search = WebDriverWait(self.driver, 20).until(
+        search = WebDriverWait(self.driver, 30).until(
         EC.presence_of_element_located((By.XPATH, Zebrinha.Barra_pesquisa)))
         search.click()
         search.clear()
@@ -124,12 +137,12 @@ class Zebrinha:
         except:
             pass
         
-        return pessoas_grupo
+        return sorted(pessoas_grupo)
     
     def buscar_Docs(self, contatos):
         
         for self.contato in contatos:
-            search = WebDriverWait(self.driver, 20).until(
+            search = WebDriverWait(self.driver, 30).until(
             EC.presence_of_element_located((By.XPATH, Zebrinha.Barra_pesquisa)))
             
             search.click()
@@ -161,7 +174,7 @@ class Zebrinha:
             except:
                 pass
             
-    def enviar_Mensagem(self, contatos):
+    def enviar_Mensagem(self, tabela):
         
         '''
         
@@ -179,8 +192,9 @@ class Zebrinha:
         None.
 
         '''
-        for self.contato in contatos:
-            search = WebDriverWait(self.driver, 20).until(
+        for self.contato, self.situação in zip(tabela['Nome'], tabela[self.mes]):
+        #for self.contato in (contatos):
+            search = WebDriverWait(self.driver, 30).until(
             EC.presence_of_element_located((By.XPATH, Zebrinha.Barra_pesquisa)))
             
             search.click()
@@ -194,24 +208,60 @@ class Zebrinha:
             texto.clear()
             texto.send_keys(self.definir_Mensagem())
             texto.send_keys(Keys.ENTER)
+    
+    def ultimo_envio(self, contatos):
+        
+        '''
+        Entra o ultimo envio do contato.
+
+        Parameters
+        ----------
+        contatos : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        '''
+        
+        Ulti = '//*[@id="main"]/div[3]/div/div/div[3]/div[23]/div/div/div/div[1]/div/span[1]'
+        
+        for self.contato in (contatos):
+            search = WebDriverWait(self.driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, Zebrinha.Barra_pesquisa)))
+            
+            search.click()
+            search.clear()
+            
+            search.send_keys(self.contato)
+            time.sleep(Zebrinha.tempo)
+            search.send_keys(Keys.ENTER)
+            
+            link = self.driver.find_element_by_xpath(Ulti)
+            link.click()
         
     def definir_Mensagem(self):
         msg = f''' 
         
-        Olá, {self.contato} tudo bem ? To testando meu robozinho! IGNORE ;)
+        Olá, {self.contato} .... Vc {self.situação}! att: Zebrinha agiota
+        ;)
         
         '''
         return msg
-            
-
+ 
     
-PATH = 'C:/Users/arthu/Downloads/chromedriver_win32/chromedriver.exe'    
-Zb = Zebrinha(PATH)
+#------------------------ PROGRAME AQUI - EXPLEMPLO DE CÓDIGO -----------------------
 
-#Contatos = Zb.buscarContatos_byGroup('Aqui o choro é livre')
+tabela = pd.read_excel('D:/UNESP/AeroDesign/Códigos_Python/Dados/caixa_teste.xlsx')
+tabela = tabela.fillna('Não pagou')
 
-Contatos = ['Lele Prima', 'Wine queen']
+PATH = 'C:/Users/arthu/Downloads/chromedriver_win32/chromedriver.exe'   
+Zb = Zebrinha(PATH, 'março')
 
-Zb.buscar_Docs(Contatos)
-Zb.fechar()
+# # contatos = Zb.buscarContatos_byGroup('Desempenho')
 
+# Zb.enviar_Mensagem(tabela)
+# Zb.fechar()
+cont = ['Cacique']
+Zb.cacique(cont)
