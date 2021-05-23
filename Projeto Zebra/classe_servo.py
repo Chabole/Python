@@ -12,6 +12,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+   
 class Servo:
     
     def __init__(self, nome):
@@ -22,11 +23,11 @@ class Servo:
         return df
 
 servo_1 = Servo('Servo 1')
-tabela = servo_1.importar_Dados('D:/UNESP/AeroDesign/Códigos_Python/Dados/Servo_Data.xlsx')        
-eq_reta = np.polyfit(tabela['Torque'], tabela['Corrente'], 1)
+tabela = servo_1.importar_Dados('D:/UNESP/AeroDesign/Códigos_Python/Dados/Servo_Data.xlsx')
+        
+eq_reta = np.polyfit(tabela['Torque'], tabela['Corrente'], 2)
 
 fig, ax_1 = plt.subplots()
 ax_1.set(title='Corrente x Torque')
 
-r = sns.regplot(x='Torque', y='Corrente', data=tabela, ax=ax_1)        
-    
+r = sns.regplot(x='Torque', y='Corrente', data=tabela, ax=ax_1, ci=False)     
