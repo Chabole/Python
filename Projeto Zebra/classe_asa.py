@@ -44,6 +44,20 @@ class Asa:
         return Le
     
     def força_Cortante(self, W):
+        '''
+        Calcula a força cortante
+        
+        Parameters
+        ----------
+        W : float ou array
+            Peso.
+
+        Returns
+        -------
+        V : float ou array
+            força cortante.
+
+        '''
         V=[]
         d=0.03
         L = self.distElip_Sust(W)
