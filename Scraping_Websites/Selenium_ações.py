@@ -26,31 +26,44 @@ driver = webdriver.Chrome(PATH)
 #Acessa o site
 driver.get('https://statusinvest.com.br/')
 
-#Ativos que irá ser pesquisado no site
-ativos = ['EMBR3', 'BBAS3', 'BBSE3', 'ITSA4', 'ABEV3', 'JBSS3', 'PETR3', 'BRDT3', 'VALE3',
-          'SANB3', 'ITUB3', 'BIDI3', 'CPFE3', 'FLRY3']
+# #Ativos que irá ser pesquisado no site
+# ativos = ['EMBR3', 'BBAS3', 'BBSE3', 'ITSA4', 'ABEV3', 'JBSS3', 'PETR3', 'BRDT3', 'VALE3',
+#           'SANB3', 'ITUB3', 'BIDI3', 'CPFE3', 'FLRY3']
 
+dados_df = pd.read_excel('D:/Arquivos Perssoais/PythonProjects/Projetos de automação/Ações_listadas_B3.xlsx')
+
+ativos = dados_df['Código']
 
 Tabela=[]
 for ativo in ativos:   
     
+    icone_class = 'main-search'
+    busca_xpath = '//*[@id="main-search"]/div[1]/span[1]/input[2]'
+    ação_xpath = '//*[@id="main-search"]/div[2]/div/div/a/div/div[2]/div/div[2]'
+    
     #Encontra e clica no icone de busca
-    icone = driver.find_element_by_class_name('main-search')
+    #icone = driver.find_element_by_class_name('main-search')
+    
+    icone = WebDriverWait(driver, 25).until(
+        EC.presence_of_element_located((By.CLASS_NAME, icone_class)))
     icone.click()
     
     #Enontra a barra de busca e digita o nome da ação
-    busca = driver.find_element_by_xpath('//*[@id="main-search"]/div[1]/span[1]/input[2]')
+    #busca = driver.find_element_by_xpath('//*[@id="main-search"]/div[1]/span[1]/input[2]')
+    
+    busca = WebDriverWait(driver, 25).until(
+        EC.presence_of_element_located((By.XPATH, busca_xpath)))
     busca.send_keys(ativo)
     
     #Espera a barra da ação aparecer e clica no ativo.
-    ação = WebDriverWait(driver, 5).until(
-        EC.presence_of_element_located((By.XPATH,'//*[@id="main-search"]/div[2]/div/div/a/div/div[2]/div/div[2]'))
-    )
+    ação = WebDriverWait(driver, 25).until(
+        EC.presence_of_element_located((By.XPATH, ação_xpath)))
     ação.click()
     
     #Lê a página e busca alguns indicadore do ativo
     Tabela.append({
         
+        'Código': ativo,
         'Ativo':((driver.find_element_by_xpath('//*[@id="main-header"]/div/div/div[1]/h1')).text),    
         'Min mês':((driver.find_element_by_xpath('//*[@id="main-2"]/div[2]/div/div[1]/div/div[2]/div/div[2]/div/span[2]')).text),   
         'Max mês':((driver.find_element_by_xpath('//*[@id="main-2"]/div[2]/div/div[1]/div/div[3]/div/div[2]/div/span[2]')).text),   
@@ -65,11 +78,11 @@ for ativo in ativos:
         'D.Y':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[1]/div/div/strong')).text)
         
         })
-    
+
 #Cria o DataFrame a partir do dicionário 'Tabela'
 df = pd.DataFrame(data=Tabela)
 
 #Salva em em arquivo excel
 df.to_excel('D:/Arquivos Perssoais/Finanças/Planilha_automática.xlsx', 'Planilha geral')
-driver.quit()
+#driver.quit()
 
