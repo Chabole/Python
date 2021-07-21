@@ -270,10 +270,14 @@ class Zebrinha:
 
 #------------------------ EXPLEMPLO DE CÓDIGO UTILIZAÇÃO -----------------------
 
+'''
+
 PATH = 'C:/Users/arthu/Downloads/chromedriver_win32/chromedriver.exe'  
  
 Zb = Zebrinha(PATH, 'Janeiro')
 Local = 'D:/UNESP/AeroDesign/Códigos_Python/Dados/caixa_teste.xlsx'
 Zb.enviar_Msg_fromExcel(1, Local, True)
 Zb.fechar()
+
+'''
 
