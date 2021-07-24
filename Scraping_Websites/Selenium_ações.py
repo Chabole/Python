@@ -37,12 +37,26 @@ driver.get('https://statusinvest.com.br/')
 
 #ativos = ['EMBR3', 'BBAS3', 'BBSE3']
 
-dados_df = pd.read_excel('D:/Arquivos Perssoais/PythonProjects/Projetos de automação/Ações_listadas_B3.xlsx')
-ativos = dados_df['Código']
+dados_df = pd.read_excel('D:/Arquivos Perssoais/Finanças/Planilha_automática_New.xlsx', sheet_name='Sheet2')
+
+
+del_list = ['BAHI11', 'BTTL3', 'EQMA3B', 'CEED4']
+
+for delete in del_list:
+    
+    # Get names of indexes for which column Stock has value No
+    indexNames = dados_df[dados_df['Papel'] == delete].index
+    
+    # Delete these row indexes from dataFrame
+    dados_df.drop(indexNames , inplace=True)
+
+ativos = dados_df['Papel']
+
+
 
 Tabela=[]
-for ativo in ativos:   
-    
+for i, ativo in enumerate(ativos):   
+    print(f'{ativo} iteração {i}')
     #@ID_XPATH variáveis
     icone_class = 'main-search'
     busca_xpath = '//*[@id="main-search"]/div[1]/span[1]/input[2]'
@@ -57,40 +71,64 @@ for ativo in ativos:
     busca = WebDriverWait(driver, 25).until(
         EC.presence_of_element_located((By.XPATH, busca_xpath)))
     busca.send_keys(ativo)
-    
-    #Espera a barra da ação aparecer e clica no ativo.
-    ação = WebDriverWait(driver, 25).until(
+
+    try:
+        
+        #Espera a barra da ação aparecer e clica no ativo.
+        ação = WebDriverWait(driver, 25).until(
         EC.presence_of_element_located((By.XPATH, ação_xpath)))
-    ação.click()
     
-    #Lê a página e busca alguns indicadore do ativo
-    Tabela.append({
+        ação.click()
         
-        'Código': ativo,
-        'Ativo':((driver.find_element_by_xpath('//*[@id="main-header"]/div/div/div[1]/h1')).text),   
-        'Setor':(driver.find_element_by_xpath('//*[@id="company-section"]/div/div[3]/div/div[1]/div/div/div/a/strong')).text,
-        'Sub setor':(driver.find_element_by_xpath('//*[@id="company-section"]/div/div[3]/div/div[2]/div/div/div/a/strong')).text,
-        
-        'Min mês':((driver.find_element_by_xpath('//*[@id="main-2"]/div[2]/div/div[1]/div/div[2]/div/div[2]/div/span[2]')).text),   
-        'Max mês':((driver.find_element_by_xpath('//*[@id="main-2"]/div[2]/div/div[1]/div/div[3]/div/div[2]/div/span[2]')).text),   
-        'Preço atual':((driver.find_element_by_xpath('//*[@id="main-2"]/div[2]/div/div[1]/div/div[1]/div/div[1]/strong')).text),
-
-        'L/P':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[2]/div/div/strong')).text),
-        'V/VP':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[4]/div/div/strong')).text),
-        'VPA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[9]/div/div/strong')).text),
-        'Passivo/Ativos':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[2]/div/div[5]/div/div/strong')).text),
-        'Divida/PL':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[2]/div/div[1]/div/div/strong')).text),
-
-        'ROE':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[4]/div/div[1]/div/div/strong')).text),
-        'ROIC':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[4]/div/div[3]/div/div/strong')).text),
-        
-        'P/EBIT':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[8]/div/div/strong')).text),
-        'P/EBITDA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[7]/div/div/strong')).text),
-        'EV/EBIT':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[6]/div/div/strong')).text),
-        'EV/EBITDA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[5]/div/div/strong')).text),
-        'D.Y':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[1]/div/div/strong')).text)
-        
-        })
+        #Lê a página e busca alguns indicadore do ativo
+        Tabela.append({
+            
+            #Ativo
+            'Código': ativo,
+            'Ativo':((driver.find_element_by_xpath('//*[@id="main-header"]/div/div/div[1]/h1')).text),   
+            'Setor':(driver.find_element_by_xpath('//*[@id="company-section"]/div/div[3]/div/div[1]/div/div/div/a/strong')).text,
+            'Sub setor':(driver.find_element_by_xpath('//*[@id="company-section"]/div/div[3]/div/div[2]/div/div/div/a/strong')).text,
+            
+            #Preço
+            'Min mês':((driver.find_element_by_xpath('//*[@id="main-2"]/div[2]/div/div[1]/div/div[2]/div/div[2]/div/span[2]')).text),   
+            'Max mês':((driver.find_element_by_xpath('//*[@id="main-2"]/div[2]/div/div[1]/div/div[3]/div/div[2]/div/span[2]')).text),   
+            'Preço atual':((driver.find_element_by_xpath('//*[@id="main-2"]/div[2]/div/div[1]/div/div[1]/div/div[1]/strong')).text),
+            
+            #Indicadores de valuation
+            'L/P':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[2]/div/div/strong')).text),
+            'V/VP':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[4]/div/div/strong')).text),
+            'VPA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[9]/div/div/strong')).text),
+            'LPA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[11]/div/div/strong')).text),
+            'PEG RATIO':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[3]/div/div/strong')).text),
+            'P/EBIT':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[8]/div/div/strong')).text),
+            'P/EBITDA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[7]/div/div/strong')).text),
+            'EV/EBIT':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[6]/div/div/strong')).text),
+            'EV/EBITDA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[5]/div/div/strong')).text),
+            'D.Y':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[1]/div/div[1]/div/div/strong')).text),
+            
+            #Indicadores de endividamento
+            'Passivo/Ativos':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[2]/div/div[5]/div/div/strong')).text),
+            'Divida/PL':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[2]/div/div[1]/div/div/strong')).text),
+            'LIQ.CORRENTE':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[2]/div/div[6]/div/div/strong')).text),
+            'DÍV.LÍQUIDA/EBIT':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[2]/div/div[3]/div/div/strong')).text),
+            'DÍV.LÍQUIDA/EBITDA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[2]/div/div[2]/div/div/strong')).text),
+    
+            #Indicadores de eficiência
+            'M. LÍQUIDA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[3]/div/div[4]/div/div/strong')).text),
+            'M. EBITDA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[3]/div/div[2]/div/div/strong')).text),
+    
+            #Indicadores de rentabilidade 
+            'ROE':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[4]/div/div[1]/div/div/strong')).text),
+            'ROIC':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[4]/div/div[3]/div/div/strong')).text),
+            'ROA':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[4]/div/div[2]/div/div/strong')).text),
+            'GIRO ATIVOS':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[4]/div/div[4]/div/div/strong')).text),
+            
+            #Incadores de crescimento
+            'CAGR Receitas 5 anos':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[5]/div/div[1]/div/div/strong')).text),
+            'CAGR Lucros 5 anos':((driver.find_element_by_xpath('//*[@id="indicators-section"]/div[2]/div/div[5]/div/div[2]/div/div/strong')).text)
+            })
+    except:
+        continue
 
 driver.quit()
 
@@ -113,4 +151,4 @@ for coluna in range(len(tabela_df.columns)-4):
 tabela_df = tabela_df.fillna(0)
 
 #Salvando em arquivo excel
-tabela_df.to_excel('D:/Arquivos Perssoais/Finanças/Planilha_automática_New.xlsx') #tirar o index
+tabela_df.to_excel('D:/Arquivos Perssoais/Finanças/B3_ATIVOS.xlsx') #tirar o index
