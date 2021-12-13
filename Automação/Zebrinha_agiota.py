@@ -26,21 +26,21 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+import pyautogui 
 import time
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup 
 
 class Zebrinha:
-    #Tempo de espera em segundos
-    tempo = 0.2
     
     #Colocar os XPATH aqui (selenium)
     Barra_pesquisa = '//*[@id="side"]/div[1]/div/label/div/div[2]'
     Barra_mensagem = '//*[@id="main"]/footer/div[1]/div[2]/div/div[2]'
     Barra_grupo = '//*[@id="main"]/header/div[2]/div[1]/div/span'
-    Barra_docs = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div/section/div[2]/div[2]/div/div[1]/div[1]'
-    Botão_docs = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div[1]/button[2]'
+    Barra_docs = "kia3R _2wzbH"
+    Botão_docs = "_2-q8E _2Rdwt"
     Botão_mais = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div/section/div[5]/div[5]/div[2]/div/div'
     Botão_reporte = '//*[@id="app"]/div[1]/div[1]/div[2]/div[3]/span/div[1]/span/div[1]/div/section/div[7]/div/div[2]'
     Botão_cancel = '//*[@id="app"]/div[1]/span[2]/div[1]/div/div/div/div/div/div[2]/div[1]/div/div'
@@ -59,8 +59,38 @@ class Zebrinha:
         self.driver.get('https://web.whatsapp.com')
         self.mes = mes
         
+    def __buscarContatos__(self, contato):
+        
+        search = WebDriverWait(self.driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, Zebrinha.Barra_pesquisa)))
+        
+        actions = ActionChains(self.driver)
+        actions.click(search)
+        search.clear()
+        actions.send_keys_to_element(search, self.contato)
+        actions.send_keys_to_element(search, Keys.ENTER)
+        
+        actions.perform()
+    
+    def __enviarMensagem__(self):
+        
+        texto = self.driver.find_element_by_xpath(Zebrinha.Barra_mensagem)
+        
+        actions1 = ActionChains(self.driver)
+        texto.clear()
+        actions1.send_keys_to_element(texto, self.definir_Mensagem())
+        actions1.send_keys_to_element(texto, Keys.ENTER)
+        
+        actions1.perform()
+
     def fechar(self):
         self.driver.close()
+        try:
+            print(f'Envio feito para {self.num} contatos realizado com sucesso! ;)')
+            print(f'Volte sempre att: Zebrinha')
+        except:
+            print(f'Terminei a tarefa! seu computador está disponível agora ...')
+            print(f'Volte sempre att: Zebrinha')
 
     #Esta com problema em encontrar grupos com mais de 20 contatos
     def buscarContatos_byGroup(self, Nome_Grupo, grupo_Grande=False):
@@ -90,7 +120,6 @@ class Zebrinha:
         search.click()
         search.clear()
         search.send_keys(Nome_Grupo)
-        time.sleep(Zebrinha.tempo)
         search.send_keys(Keys.ENTER)
         
         ID_grupo = self.driver.find_element_by_xpath(Zebrinha.Barra_grupo)
@@ -137,8 +166,13 @@ class Zebrinha:
         except:
             pass
         
-        return sorted(pessoas_grupo)
+        pessoas_grupo = sorted(pessoas_grupo) 
+        pessoas_grupo = pd.DataFrame(data=pessoas_grupo)
+        pessoas_grupo = pessoas_grupo.drop_duplicates()
+        
+        return pessoas_grupo
     
+    #O Google esta atualmente me bloqueando!
     def buscar_Docs(self, contatos):
         
         for self.contato in contatos:
@@ -149,7 +183,6 @@ class Zebrinha:
             search.clear()
             
             search.send_keys(self.contato)
-            time.sleep(Zebrinha.tempo)
             search.send_keys(Keys.ENTER)
             
             Barra_contato = self.driver.find_element_by_xpath(Zebrinha.Barra_grupo)
@@ -158,12 +191,12 @@ class Zebrinha:
             #Problema aqui: NOT LOCATED
             try:
                 click_Docs = WebDriverWait(self.driver, 2).until(
-            EC.presence_of_element_located((By.XPATH, Zebrinha.Barra_docs)))
+            EC.presence_of_element_located((By.CLASS_NAME, Zebrinha.Barra_docs)))
                 click_Docs.click()
             except:
                 pass
             
-            Docs = self.driver.find_element_by_xpath(Zebrinha.Botão_docs)
+            Docs = self.driver.find_element_by_class_name(Zebrinha.Botão_docs)
             Docs.click()
             
             try:
@@ -174,15 +207,45 @@ class Zebrinha:
             except:
                 pass
             
-    def enviar_Mensagem(self, tabela):
-        
+    def enviar_Msg_fromExcel(self, posição_seuNome, local_excel, Preencher_NaN=True):
         '''
+        Envia mensagem para os cantatos e utilizando informações contidas em um arquivo excel. 
+        Definida no método definir_Mensagem para a lista de contatos.
+
+        Parameters
+        ----------
+        posição_seuNome : int
+            Posição de onde esta seu nome no arquivo.
+        local_excel : PATH
+            Local onde esta com final '.xlsx'. Exemplo: 'D:/UNESP/Dados/caixinha.xlsx'.
+        Preencher_NaN : Boolean, optional
+            Completar as células vázias com 'não pago'. The default is True.
+
+        Returns
+        -------
+        None.
+
+        '''
+        tabela = pd.read_excel(local_excel)
+        tabela = tabela.replace('pago  ', 'pagou') # ERRO: 'pago' verificar com financeiro
+        tabela = tabela.drop(posição_seuNome)
         
+        if Preencher_NaN:
+            tabela = tabela.fillna('não pagou')
+        
+        self.num = 0        
+        for self.contato, self.situação in zip(tabela['Nome'], tabela[self.mes]):
+            self.__buscarContatos__(self.contato)
+            self.__enviarMensagem__()
+            self.num += 1
+                 
+    def enviar_Msg_fromlista(self, Lista_contatos):
+        '''
         Envia mensagem definida no método definir_Mensagem para a lista de contatos.
         
         Parameters
         ----------
-        contatos : Lista ou array
+        Lista_contatos : Lista ou array
             Coloque a lista de contatos que deseja enviar 
             as mensagens. Ex: contatos = ['Arthur', 'Rafael', 'Rebeca']. Importante 
             colocar '[ ... ]'.
@@ -190,78 +253,27 @@ class Zebrinha:
         Returns
         -------
         None.
-
         '''
-        for self.contato, self.situação in zip(tabela['Nome'], tabela[self.mes]):
-        #for self.contato in (contatos):
-            search = WebDriverWait(self.driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, Zebrinha.Barra_pesquisa)))
-            
-            search.click()
-            search.clear()
-            
-            search.send_keys(self.contato)
-            time.sleep(Zebrinha.tempo)
-            search.send_keys(Keys.ENTER)
-            
-            texto = self.driver.find_element_by_xpath(Zebrinha.Barra_mensagem)
-            texto.clear()
-            texto.send_keys(self.definir_Mensagem())
-            texto.send_keys(Keys.ENTER)
-    
-    def ultimo_envio(self, contatos):
-        
-        '''
-        Entra o ultimo envio do contato.
-
-        Parameters
-        ----------
-        contatos : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
-        '''
-        
-        Ulti = '//*[@id="main"]/div[3]/div/div/div[3]/div[23]/div/div/div/div[1]/div/span[1]'
-        
-        for self.contato in (contatos):
-            search = WebDriverWait(self.driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, Zebrinha.Barra_pesquisa)))
-            
-            search.click()
-            search.clear()
-            
-            search.send_keys(self.contato)
-            time.sleep(Zebrinha.tempo)
-            search.send_keys(Keys.ENTER)
-            
-            link = self.driver.find_element_by_xpath(Ulti)
-            link.click()
-        
+        self.num = 0        
+        for self.contato in Lista_contatos:
+            self.__buscarContatos__(self.contato)
+            self.__enviarMensagem__()
+            self.num += 1
+               
     def definir_Mensagem(self):
-        msg = f''' 
+        return  f''' 
         
-        Olá, {self.contato} .... Vc {self.situação}! att: Zebrinha agiota
+        Olá, {self.contato} vc {self.situação} o mês de {self.mes} att: Zebrinha agiota
         ;)
         
-        '''
-        return msg
- 
     
-#------------------------ PROGRAME AQUI - EXPLEMPLO DE CÓDIGO -----------------------
+        '''
 
-tabela = pd.read_excel('D:/UNESP/AeroDesign/Códigos_Python/Dados/caixa_teste.xlsx')
-tabela = tabela.fillna('Não pagou')
+#------------------------ PROGRAME AQUI - EXPLEMPLO DE CÓDIGO -----------------------
 
 PATH = 'C:/Users/arthu/Downloads/chromedriver_win32/chromedriver.exe'   
 Zb = Zebrinha(PATH, 'março')
+Local = 'D:/UNESP/AeroDesign/Códigos_Python/Dados/caixa_auto.xlsx'
+Zb.enviar_Msg_fromExcel(1, Local, True)
+Zb.fechar()
 
-# # contatos = Zb.buscarContatos_byGroup('Desempenho')
-
-# Zb.enviar_Mensagem(tabela)
-# Zb.fechar()
-cont = ['Cacique']
-Zb.cacique(cont)
