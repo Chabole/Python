@@ -27,7 +27,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-import pyautogui 
 import time
 import pandas as pd
 import requests
@@ -271,9 +270,10 @@ class Zebrinha:
 
 #------------------------ PROGRAME AQUI - EXPLEMPLO DE CÓDIGO -----------------------
 
-PATH = 'C:/Users/arthu/Downloads/chromedriver_win32/chromedriver.exe'   
-Zb = Zebrinha(PATH, 'março')
-Local = 'D:/UNESP/AeroDesign/Códigos_Python/Dados/caixa_auto.xlsx'
+PATH = 'C:/Users/arthu/Downloads/chromedriver_win32/chromedriver.exe'  
+ 
+Zb = Zebrinha(PATH, 'Janeiro')
+Local = 'D:/UNESP/AeroDesign/Códigos_Python/Dados/caixa_teste.xlsx'
 Zb.enviar_Msg_fromExcel(1, Local, True)
 Zb.fechar()
 

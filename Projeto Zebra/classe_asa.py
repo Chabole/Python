@@ -9,109 +9,77 @@ Classe wing
 """
 
 import numpy as np
-#import matplotlib.pyplot as plt
-#import ZebraLib.zebralib.zebraperformance as zp 
-#from ZebraLib.zebralib.zebraperformance import Airplane
+import matplotlib.pyplot as plt
+from ZebraLib.zebralib.zebra_wing import integral
+from ZebraLib.zebralib.zebraperformance import Airplane
+
 
 class Asa:
     
-    def __init__(self, nome, S, b, CLmax):
+    def __init__(self, nome, S, b, CLmax, W=140):
         self.nome = nome
         self.S = S
         self.b = b
         self.CLmax = CLmax
         
         self.AR = (self.b**2)/self.S
-        self.K = 1/(3.14*0.75*self.AR)
+        self.y = np.linspace(-self.b/2, self.b/2)
         
-        self.Cl = np.linspace(0.1, self.CLmax)
+    def V_stall(self, rho):
+        return (2*self.W/(rho*self.S*self.CLmax))**0.5
     
-    def __str__(self):
-        self.AR = round(self.AR,2)
-        return (f'{self.nome}, S={self.S},\
-    b={self.b}, AR={self.AR}')
-                    
-    def V_stall(self, W):
-        
-        Vstall = (2*W/(1.225*self.S*self.CLmax))**0.5
-        return Vstall
-    
-    def distElip_Sust(self, W):
-        y = np.linspace(-self.b/2, self.b/2, 500)
+    def distElip_Sust(self, W=140):
         A = 4*(2.3*W)/(self.b*3.14)
-        Le = A*((1-((2*y/self.b)**2))**0.5)
-        return y, Le
-
-    def Cd_Total(self):
-        Cd = 0.08 + (self.K*(self.Cl**2)) 
-        return Cd
+        Le = A*((1-((2*self.y/self.b)**2))**0.5)
+        return Le
     
-    def momento_Fletor(self, W):
-        y, Le = self.distElip_Sust(W)
-        M = abs(y*Le)
+    def força_Cortante(self, W):
+        V=[]
+        d=0.03
+        L = self.distElip_Sust(W)
+        y = self.y
+        F = integral(L, y, y.min(), y.max())
+        for i in range(0,len(y)):
+            if y[i] < (-d/2):
+                V.append(integral(L,y,y.min(),y[i]))
+            if y[i]>(-d/2) and y[i]<(d/2):
+                V.append(integral(L,y,y.min(),y[i])-F/2)
+            if y[i]>(d/2):
+                V.append(integral(L, y, y.min(), y[i])-F)   
+        return V
+    
+    def moment_Fletor(self, W):
+        V = self.força_Cortante(W)
+        y = self.y
+        M=[]
+        for i in range(0, len(y)):
+            M.append(integral(V, y, y.min(), y[i]))
+        for i in range(0,len(y)):
+            M[-i]=M[i]
         return M
-
-class Aileron:
-    def __init__(self, nome, S, b):
-        self.nome = nome
-        self.S = S
-        self.b = b
     
-    def volume_h(self):
-        pass
+    def import_dados(self, Local_nome, Planilha):
+        a, cl, cd = Airplane.import_WingData(Local_nome, Planilha)
+        return a, cl, cd
         
-# # #===================================================    
-
-# asa_1 = Asa('Asa 1', 0.988, 2.08, 1.62)
-# asa_2 = Asa('Asa 2', 0.868, 2.5, 1.5)
-# asa_3 = Asa('Asa 3', 1.2, 2.65, 1.5)
-
-# Asas = np.array((asa_1, asa_2, asa_3))
-
-# #================  PLOTS COM OBJETOS  =================
-
-# fig, ax = plt.subplots()
-# ax.set(title='Distribuição eliptica de sustentação', 
-#         xlabel='Posição relativa a asa (m)',
-#         ylabel='Carregamento (N)')
-
-# fig, ax2 = plt.subplots()
-# ax2.set(title='Cl x Cd', 
-#         xlabel='Cd',
-#         ylabel='Cl')
-
-# for Asa in Asas:
+avião = Airplane()
+Cl3 = np.linspace(0.1, 1.9)
+cd3 = avião.drag_Coef(Cl3)
     
-#     y, dist_elip = Asa.distElip_Sust(140)
-#     ax.plot(y, dist_elip, label= f'{Asa}')
+Zb1 = Asa('Asa 1', 0.988, 2.08, 1.7)
+Zb2 = Asa('Asa 2', 1, 3, 2.08, 1.9)
+
+a1, cl1, cd1 = Zb1.import_dados('D:/UNESP/AeroDesign/Códigos_Python/Dados/dados_asas.xlsx', 'Planilha1')
+a2, cl2, cd2 = Zb2.import_dados('D:/UNESP/AeroDesign/Códigos_Python/Dados/dados_asas.xlsx', 'Planilha2')
+
+fig, ax = plt.subplots()
+ax.plot(cd1, cl1, label='Zb1')
+ax.plot(cd2, cl2, label='Zb2')
+ax.plot(cd3, Cl3, label='Avião sem efeito solo')
+ax.plot(avião.drag_Coef(Ground_Effect=True, CL=Cl3), Cl3, '--', label='Avião com efeito solo')
+ax.legend()
+
     
-#     Cd = Asa.Cd_Total()
-#     ax2.plot(Cd, Asa.Cl, label= f'{Asa}')
-
-# ax.legend()
-# ax.grid(linestyle='--')
-
-# ax2.set_xlim(0)
-# ax2.legend()
-# ax2.grid(linestyle='--')
-        """
-
-        Calcula a velocidade de estoll da asa        
-
-        Parameters
-        ----------
-        W : floar ou array
-            Valor(s) do peso da aeronave.
-
-        Returns
-        -------
-        Vstall : float ou array
-            Velocidade de estoll.
-            
-        Examples
-        -------
-        >>> import numpy
-        
-        >>> asa_1 = Wing('Asa 1', 0.988, 2.08, 1.62)
-
-        """
+    
+    
+    

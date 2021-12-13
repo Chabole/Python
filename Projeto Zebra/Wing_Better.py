@@ -36,18 +36,14 @@ class Wing:
         d=0.03
         L = self.distElip_Sust(W)
         F = integral(L,self.y,self.y.min(),self.y.max())
-        #F = quad(L,self.y.min(),self.y.max())
-        
+
         for i in range(0,len(self.y)):
             if self.y[i] < (-d/2):
                 V.append(integral(L,self.y,self.y.min(),self.y[i]))
-                #V.append(quad(L,self.y.min(),self.y[i])-F/2)
             if self.y[i]>(-d/2) and self.y[i]<(d/2):
                 V.append(integral(L,self.y,self.y.min(),self.y[i])-F/2)
-                #V.append(quad(L,self.y.min(),self.y[i])-F/2)
             if self.y[i]>(d/2):
                 V.append(integral(L,self.y,self.y.min(),self.y[i])-F)
-                #V.append(quad(L,self.y.min(),self.y[i])-F)
         return V
         
     def moment_Fletor(self, V):
