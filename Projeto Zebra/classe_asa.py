@@ -13,7 +13,8 @@ from ZebraLib.zebralib.zebra_wing import integral
 from ZebraLib.zebralib.zebraperformance import Airplane
 
 class Asa:
-    def __init__(self, nome, S, b, CLmax, W=140):
+    
+    def __init__(self, nome, S, b, CLmax):
         self.nome = nome
         self.S = S
         self.b = b
